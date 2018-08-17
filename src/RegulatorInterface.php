@@ -55,7 +55,7 @@ interface RegulatorInterface
     public function isArray();
 
     /**
-     * Is the entity being regulated a scalar (string, integer, number, boolean, or null)?
+     * Is the entity being regulated a scalar (string, integer, number, timestamp, boolean, or null)?
      * @return boolean
      */
     public function isScalar();

@@ -1,4 +1,5 @@
 <?php
+
 namespace Dto\Validators;
 
 use Dto\Exceptions\InvalidTypeException;
@@ -14,6 +15,7 @@ class TypeValidator extends AbstractValidator implements ValidatorInterface
         'array',
         'number',
         'string',
+        'timestamp',
         'integer' // integer JSON numbers SHOULD NOT be encoded with a fractional part.
     ];
 
@@ -29,18 +31,18 @@ class TypeValidator extends AbstractValidator implements ValidatorInterface
             $value = $this->typeCast($value, $type);
         }
 
-        $this->tryAllDefinedTypes($value, (array) $type, $schema);
+        $this->tryAllDefinedTypes($value, (array)$type, $schema);
 
         return $value;
     }
 
     protected function ensureValidDefinition()
     {
-        $types = (array) $this->schemaAccessor->getType();
+        $types = (array)$this->schemaAccessor->getType();
 
         foreach ($types as $t) {
             if (!in_array($t, $this->valid_types)) {
-                throw new InvalidTypeException('"type" "'.$t.'" is not one of the allowed types: '. implode(',', $this->valid_types));
+                throw new InvalidTypeException('"type" "' . $t . '" is not one of the allowed types: ' . implode(',', $this->valid_types));
             }
         }
 
@@ -68,7 +70,7 @@ class TypeValidator extends AbstractValidator implements ValidatorInterface
      */
     protected function typeCast($value, $type)
     {
-        return $this->container->make(TypeConverterInterface::class)->{'to'.$type}($value);
+        return $this->container->make(TypeConverterInterface::class)->{'to' . $type}($value);
     }
 
     /**
@@ -84,12 +86,12 @@ class TypeValidator extends AbstractValidator implements ValidatorInterface
     {
         $passed_validation = false;
         foreach ($types as $t) {
-            try {
+            try
+            {
                 $this->container->make($t . 'Validator')->validate($value, $schema);
                 $passed_validation = true;
                 return;
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 // ignore for now
             }
         }

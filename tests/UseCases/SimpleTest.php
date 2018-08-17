@@ -2,6 +2,8 @@
 
 namespace DtoTest\UseCases;
 
+use Cake\Chronos\Chronos;
+use Carbon\Carbon;
 use Dto\Dto;
 use Dto\DtoInterface;
 use DtoTest\TestCase;
@@ -27,8 +29,8 @@ class SimpleTest extends TestCase
     {
         $dto = new Dto();
         $this->assertInstanceOf(DtoInterface::class, $dto);
-        $dto->hydrate(['a','b','c']);
-        $this->assertEquals(['a','b','c'], $dto->toArray());
+        $dto->hydrate(['a', 'b', 'c']);
+        $this->assertEquals(['a', 'b', 'c'], $dto->toArray());
     }
 
 
@@ -46,7 +48,7 @@ class SimpleTest extends TestCase
         $dto->hydrate(['a' => 'apple', 'i' => '42']);
         $this->assertEquals(['a' => 'apple', 'i' => 42], $dto->toArray());
 
-        $dto->set('a','amazing');
+        $dto->set('a', 'amazing');
 
         $this->assertEquals(['a' => 'amazing', 'i' => 42], $dto->toArray());
     }
@@ -62,7 +64,7 @@ class SimpleTest extends TestCase
         ];
         $dto = new Dto(null, $schema);
         $this->assertInstanceOf(DtoInterface::class, $dto);
-        $dto->set('a','amazing');
+        $dto->set('a', 'amazing');
 
         $this->assertEquals(['a' => 'amazing'], $dto->toArray());
 
@@ -135,6 +137,112 @@ class SimpleTest extends TestCase
 
         $dto = new Dto($data, $schema);
 
+        $this->assertEquals('xray', $dto->x);
+
+    }
+
+    /**
+     * @test
+     * @group timestamp
+     */
+    public function testCarbon()
+    {
+
+        $time = Carbon::now();
+        $data = [
+            'time' => $time
+        ];
+        $schema = null;
+        $schema = [
+            'type' => 'object',
+            'properties' => [
+                'time' => [
+                    'type' => 'timestamp'
+                ]
+            ]
+        ];
+
+        $dto = new Dto($data, $schema);
+
+        $this->assertEquals($time, $dto->get('time'));
+
+    }
+
+    /**
+     * @test
+     * @group timestamp
+     */
+    public function testChronos()
+    {
+
+        $time = Chronos::now();
+        $data = [
+            'time' => $time
+        ];
+        $schema = null;
+        $schema = [
+            'type' => 'object',
+            'properties' => [
+                'time' => [
+                    'type' => 'timestamp'
+                ]
+            ]
+        ];
+
+        $dto = new Dto($data, $schema);
+
+        $this->assertEquals($time, $dto->get('time'));
+
+    }
+
+    /**
+     * @test
+     * @group timestamp
+     */
+    public function testStringTimestamp()
+    {
+        $time = "2018-08-17 13:50:45.150374";
+        $data = [
+            'time' => $time
+        ];
+        $schema = null;
+        $schema = [
+            'type' => 'object',
+            'properties' => [
+                'time' => [
+                    'type' => 'timestamp'
+                ]
+            ]
+        ];
+
+        $dto = new Dto($data, $schema);
+
+        $this->assertEquals(new Carbon($time), $dto->get('time'));
+
+    }
+
+    /**
+     * @test
+     * @group timestamp
+     * @expectedException \Dto\Exceptions\InvalidCarbonValueException
+     */
+    public function testWrongTimestamp()
+    {
+        $time = 254;
+        $data = [
+            'time' => $time
+        ];
+        $schema = null;
+        $schema = [
+            'type' => 'object',
+            'properties' => [
+                'time' => [
+                    'type' => 'timestamp'
+                ]
+            ]
+        ];
+
+        new Dto($data, $schema);
     }
 }
 

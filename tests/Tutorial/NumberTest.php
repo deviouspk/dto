@@ -41,7 +41,9 @@ class NumberTest extends TestCase
 
         $dto = new Dto(null, $schema);
         $dto->hydrate(12);
-        $dto->hydrate(13); // BOOM
+        $this->assertEquals(12, $dto->toScalar());
+        $dto->hydrate(13);
+
     }
 
 
@@ -54,6 +56,7 @@ class NumberTest extends TestCase
 
         $dto = new Dto(null, $schema);
         $dto->hydrate(100.01);
+        $this->assertEquals(100.01, $dto->toScalar());
     }
 
     /**
@@ -80,6 +83,7 @@ class NumberTest extends TestCase
 
         $dto = new Dto(null, $schema);
         $dto->hydrate(99.99);
+        $this->assertEquals(99.99, $dto->toScalar());
     }
 
     /**

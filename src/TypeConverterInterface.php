@@ -17,4 +17,6 @@ interface TypeConverterInterface
     public function toBoolean($value);
 
     public function toNull($value);
+
+    public function toTimestamp($value);
 }

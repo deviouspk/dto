@@ -17,4 +17,6 @@ interface TypeDetectorInterface
     public function isBoolean($value);
 
     public function isNull($value);
+
+    public function isCarbon($value);
 }

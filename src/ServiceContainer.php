@@ -1,4 +1,5 @@
 <?php
+
 namespace Dto;
 
 use Dto\Validators\AllOfValidator;
@@ -15,6 +16,7 @@ use Dto\Validators\Types\ObjectValidator;
 use Dto\Validators\Types\String\FormatValidator;
 use Dto\Validators\Types\String\FormatValidatorInterface;
 use Dto\Validators\Types\StringValidator;
+use Dto\Validators\Types\TimestampValidator;
 use Dto\Validators\TypeValidator;
 use Pimple\Container;
 
@@ -120,6 +122,9 @@ class ServiceContainer implements ServiceContainerInterface
         };
         $this->container['nullValidator'] = function () {
             return new NullValidator($this);
+        };
+        $this->container['timestampValidator'] = function () {
+            return new TimestampValidator($this);
         };
 
     }

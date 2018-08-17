@@ -40,6 +40,11 @@ class TypeDetector implements TypeDetectorInterface
         return ($value === null);
     }
 
+    public function isCarbon($value)
+    {
+        return $value instanceof \DateTimeInterface || $value instanceof \DateInterval;
+    }
+
     /**
      * Is True Array?
      *

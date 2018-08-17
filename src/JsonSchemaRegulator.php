@@ -2,6 +2,7 @@
 
 namespace Dto;
 
+use Carbon\Carbon;
 use Dto\Exceptions\InvalidIndexException;
 use Dto\Exceptions\InvalidKeyException;
 
@@ -43,8 +44,7 @@ class JsonSchemaRegulator implements RegulatorInterface
     {
         if ($dto->getStorageType() === 'object') {
             $this->serviceContainer->make('objectValidator')->validate($dto->toArray(), $dto->getSchema());
-        }
-        elseif ($dto->getStorageType() === 'array') {
+        } elseif ($dto->getStorageType() === 'array') {
             $this->serviceContainer->make('arrayValidator')->validate($dto->toArray(), $dto->getSchema());
         }
     }
@@ -77,11 +77,11 @@ class JsonSchemaRegulator implements RegulatorInterface
     {
         if ($value instanceof DtoInterface) {
             $value = ($value->getStorageType() === 'scalar') ? $value->toScalar() : $value->toArray();
+        } elseif ($value instanceof Carbon) {
+            return $value;
+        } elseif (is_object($value)) {
+            $value = (array)$value;
         }
-        elseif (is_object($value)) {
-            $value = (array) $value;
-        }
-
         return $value;
     }
 
@@ -97,17 +97,15 @@ class JsonSchemaRegulator implements RegulatorInterface
         $type = $accessor->getType();
 
         if ($type && !is_array($type)) {
-            if ($type === 'object') {
+            if ($type === 'object' || $type === 'timestamp') {
                 $this->isScalar = false;
                 $this->isArray = false;
                 return 'object';
-            }
-            elseif ($type == 'array') {
+            } elseif ($type == 'array') {
                 $this->isScalar = false;
                 $this->isObject = false;
                 return 'array';
-            }
-            else {
+            } else {
                 $this->isObject = false;
                 $this->isArray = false;
                 return 'scalar';
@@ -118,12 +116,10 @@ class JsonSchemaRegulator implements RegulatorInterface
         if ($this->serviceContainer->make(TypeDetectorInterface::class)->isArray($value)) {
             $this->isArray = true;
             return 'array';
-        }
-        elseif ($this->serviceContainer->make(TypeDetectorInterface::class)->isObject($value)) {
+        } elseif ($this->serviceContainer->make(TypeDetectorInterface::class)->isObject($value)) {
             $this->isObject = true;
             return 'object';
-        }
-        else {
+        } else {
             $this->isScalar = true;
             return 'scalar';
         }
@@ -145,14 +141,11 @@ class JsonSchemaRegulator implements RegulatorInterface
 
         if (is_null($input)) {
             return $default;
-        }
-        elseif (is_null($default)) {
+        } elseif (is_null($default)) {
             return $input;
-        }
-        elseif (is_scalar($input) && is_scalar($default)) {
+        } elseif (is_scalar($input) && is_scalar($default)) {
             return $input;
-        }
-        elseif (is_array($input) && is_array($default)) {
+        } elseif (is_array($input) && is_array($default)) {
             return array_merge($default, $input);
         }
 
@@ -174,7 +167,7 @@ class JsonSchemaRegulator implements RegulatorInterface
 
         if ($maxItems = $accessor->getMaxItems()) {
             if (($index + 1) > $maxItems) {
-                throw new InvalidIndexException('Arrays with more than '.$maxItems.' items disallowed by "maxItems".');
+                throw new InvalidIndexException('Arrays with more than ' . $maxItems . ' items disallowed by "maxItems".');
             }
         }
 
@@ -198,12 +191,11 @@ class JsonSchemaRegulator implements RegulatorInterface
             if ($additionalItems === true) {
                 return [];
             }
-        }
-        elseif ($this->serviceContainer->make(TypeDetectorInterface::class)->isObject($additionalItems)) {
+        } elseif ($this->serviceContainer->make(TypeDetectorInterface::class)->isObject($additionalItems)) {
             return $additionalItems;
         }
 
-        throw new InvalidIndexException('Index not allowed by "items" and/or "additionalItems": '.$index);
+        throw new InvalidIndexException('Index not allowed by "items" and/or "additionalItems": ' . $index);
     }
 
     /**
@@ -223,9 +215,9 @@ class JsonSchemaRegulator implements RegulatorInterface
             return $properties[$key];
         }
 
-        if($patternProperties = $accessor->getPatternProperties()) {
+        if ($patternProperties = $accessor->getPatternProperties()) {
             foreach ($patternProperties as $regex => $schema) {
-                if (preg_match('/'.$regex.'/', $key)) {
+                if (preg_match('/' . $regex . '/', $key)) {
                     return $schema;
                 }
             }
@@ -235,12 +227,11 @@ class JsonSchemaRegulator implements RegulatorInterface
 
         if ($additionalProperties === true) {
             return []; // empty schema: anything goes
-        }
-        elseif (is_array($additionalProperties)) {
+        } elseif (is_array($additionalProperties)) {
             return $additionalProperties; // as a schema
         }
 
-        throw new InvalidKeyException('Key not allowed by "properties", "patternProperties", or "additionalProperties": '.$key);
+        throw new InvalidKeyException('Key not allowed by "properties", "patternProperties", or "additionalProperties": ' . $key);
     }
 
     /**
@@ -286,8 +277,7 @@ class JsonSchemaRegulator implements RegulatorInterface
             $base_dir = ($working_base_dir) ? $working_base_dir : $base_dir;
             $this->schema = $resolver->resolveSchema($schema, $base_dir);
             $this->compiled[$key] = $this->schema;
-        }
-        else {
+        } else {
             $this->schema = $this->compiled[$key];
         }
 

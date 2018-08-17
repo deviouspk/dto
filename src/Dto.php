@@ -2,6 +2,7 @@
 
 namespace Dto;
 
+use Carbon\Carbon;
 use Dto\Exceptions\InvalidArrayOperationException;
 use Dto\Exceptions\InvalidDataTypeException;
 use Dto\Exceptions\InvalidIndexException;
@@ -70,7 +71,7 @@ class Dto extends \ArrayObject implements DtoInterface
     protected function getDefaultRegulator($regulator)
     {
         if (is_null($regulator)) {
-           return new JsonSchemaRegulator(new ServiceContainer(), get_called_class());
+            return new JsonSchemaRegulator(new ServiceContainer(), get_called_class());
         }
 
         return $regulator;
@@ -114,13 +115,12 @@ class Dto extends \ArrayObject implements DtoInterface
 
         if (parent::offsetExists($key)) {
             parent::offsetGet($key)->hydrate($value);
-        }
-        else {
+        } else {
             parent::offsetSet($key, $this->regulator->getFilteredValueForKey($value, $key, $this->schema));
             $this->regulator->postValidate($this);
         }
     }
-    
+
     /**
      * Called by array access.
      *
@@ -143,13 +143,12 @@ class Dto extends \ArrayObject implements DtoInterface
             $this->regulator->postValidate($this);
             $this->items_cnt = $this->items_cnt + 1;
             return;
-        }
-        elseif (parent::offsetExists($index)) {
+        } elseif (parent::offsetExists($index)) {
             parent::offsetGet($index)->hydrate($value);
             return;
         }
 
-        throw new InvalidIndexException('Index "'.$index.'" not found in array.');
+        throw new InvalidIndexException('Index "' . $index . '" not found in array.');
 
     }
 
@@ -162,7 +161,7 @@ class Dto extends \ArrayObject implements DtoInterface
     {
         return $this->offsetExists($index);
     }
-    
+
     /**
      * @return string
      */
@@ -170,7 +169,7 @@ class Dto extends \ArrayObject implements DtoInterface
     {
         return strval($this->toScalar());
     }
-    
+
     /**
      * Append a value to the end of an array.  Defers to offsetSet to determine if location is valid for appending.
      * @link http://php.net/manual/en/arrayobject.append.php.
@@ -198,11 +197,15 @@ class Dto extends \ArrayObject implements DtoInterface
         }
 
         if (parent::offsetExists($key)) {
-            return parent::offsetGet($key);
+            $value = parent::offsetGet($key);
+            if (isset($value[0]) && $value[0] instanceof Carbon) {
+                return $value[0];
+            }
+            return $value;
         }
 
         // TODO: dynamically deepen object structure?
-        throw new InvalidKeyException('The key "'.$key.'" does not exist in this DTO.');
+        throw new InvalidKeyException('The key "' . $key . '" does not exist in this DTO.');
 
     }
 
@@ -223,7 +226,8 @@ class Dto extends \ArrayObject implements DtoInterface
         $this->hydrate($this->toArray()); // reindex, re-validate
     }
 
-    public function exists($index) {
+    public function exists($index)
+    {
         return $this->offsetExists($index);
     }
 
@@ -245,7 +249,7 @@ class Dto extends \ArrayObject implements DtoInterface
             return parent::offsetGet($index);
         }
 
-        throw new InvalidIndexException('Index "'.$index.'" not found in array.');
+        throw new InvalidIndexException('Index "' . $index . '" not found in array.');
     }
 
 
@@ -265,17 +269,19 @@ class Dto extends \ArrayObject implements DtoInterface
 
         if ($this->storage_type === 'object') {
             $this->hydrateObject($value);
-        }
-        elseif ($this->storage_type === 'array') {
+        } elseif ($this->storage_type === 'array') {
             $this->hydrateArray($value);
-        }
-        else {
+        } else {
             $this->hydrateScalar($value);
         }
     }
 
     protected function hydrateObject($value)
     {
+        if ($value instanceof Carbon) {
+            parent::offsetSet(0, $value);
+            return;
+        }
         foreach ($value as $k => $v) {
             $value[$k] = $this->regulator->getFilteredValueForKey($v, $k, $this->schema);
         }
@@ -325,7 +331,8 @@ class Dto extends \ArrayObject implements DtoInterface
     /**
      * @return string
      */
-    final public function serialize() {
+    final public function serialize()
+    {
         return $this->toJson();
     }
 
@@ -372,7 +379,6 @@ class Dto extends \ArrayObject implements DtoInterface
         foreach ($this as $k => $v) {
             $output[$k] = ($v->getStorageType() === 'scalar') ? $v->toScalar() : $v->toArray();
         }
-
         return $output;
     }
 

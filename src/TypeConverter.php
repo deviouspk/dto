@@ -1,5 +1,10 @@
 <?php
+
 namespace Dto;
+
+use Cake\Chronos\Chronos;
+use Carbon\Carbon;
+use Dto\Exceptions\InvalidCarbonValueException;
 
 /**
  * Class TypeConverter
@@ -15,7 +20,7 @@ class TypeConverter implements TypeConverterInterface
     public function toObject($value)
     {
         if (is_object($value)) {
-            $value = (array) $value;
+            $value = (array)$value;
         }
 
         return (is_array($value)) ? $value : [];
@@ -25,7 +30,7 @@ class TypeConverter implements TypeConverterInterface
     public function toArray($value)
     {
         if (is_object($value)) {
-            $value = (array) $value;
+            $value = (array)$value;
         }
 
         return (is_array($value)) ? array_values($value) : [];
@@ -62,7 +67,7 @@ class TypeConverter implements TypeConverterInterface
 
         if (is_object($value)) {
             // Yes, an empty object is considered false here (unlike in standard PHP)
-            return (empty((array) $value)) ? false : true;
+            return (empty((array)$value)) ? false : true;
         }
         // TODO: support for coercing boolean-like strings e.g. "Off", "On", "Yes", "No" etc.
         return boolval($value);
@@ -71,6 +76,20 @@ class TypeConverter implements TypeConverterInterface
     public function toNull($value)
     {
         return null;
+    }
+
+    public function toTimestamp($value)
+    {
+        try {
+            if (is_array($value)) {
+                return $this->toTimestamp($value['date']);
+            } elseif ($value instanceof Carbon) {
+                return $value;
+            }
+            return new Carbon($value);
+        } catch (\Exception $exception) {
+            throw new InvalidCarbonValueException();
+        }
     }
 
 }
