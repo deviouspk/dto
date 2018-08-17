@@ -2,6 +2,8 @@
 
 namespace Dto;
 
+use Carbon\Carbon;
+
 class TypeDetector implements TypeDetectorInterface
 {
     public function isObject($value)
@@ -40,9 +42,9 @@ class TypeDetector implements TypeDetectorInterface
         return ($value === null);
     }
 
-    public function isCarbon($value)
+    public function isTimestamp($value)
     {
-        return $value instanceof \DateTimeInterface || $value instanceof \DateInterval;
+        return is_string($value) || $value instanceof \DateTimeInterface || $value instanceof \DateInterval;
     }
 
     /**

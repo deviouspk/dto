@@ -30,7 +30,7 @@ class TimestampValidator extends AbstractValidator implements ValidatorInterface
 
     protected function checkDataType($number)
     {
-        if (!$this->container->make(TypeDetectorInterface::class)->isCarbon($number)) {
+        if (!$this->container->make(TypeDetectorInterface::class)->isTimestamp($number)) {
             throw new InvalidDataTypeException('Timestamp could not be resolved to a carbon object.');
         }
     }

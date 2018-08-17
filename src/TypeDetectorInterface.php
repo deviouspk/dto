@@ -18,5 +18,5 @@ interface TypeDetectorInterface
 
     public function isNull($value);
 
-    public function isCarbon($value);
+    public function isTimestamp($value);
 }
