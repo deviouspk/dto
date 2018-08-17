@@ -101,6 +101,11 @@ class JsonSchemaRegulator implements RegulatorInterface
                 $this->isScalar = false;
                 $this->isArray = false;
                 return 'object';
+            } else if ($type === 'timestamp') {
+                $this->isScalar = false;
+                $this->isArray = false;
+                $this->isObject = true;
+                return 'timestamp';
             } elseif ($type == 'array') {
                 $this->isScalar = false;
                 $this->isObject = false;
@@ -111,6 +116,14 @@ class JsonSchemaRegulator implements RegulatorInterface
                 return 'scalar';
             }
         }
+
+        $typeDetector = new TypeDetector();
+        if (is_array($type) && in_array("timestamp", $type) && $typeDetector->isTimestamp($value) && $value !== null) {
+            $this->isScalar = false;
+            $this->isArray = false;
+            $this->isObject = true;
+            return 'timestamp';
+        };
 
         // Empty arrays are the rub: they are considered arrays by DTO
         if ($this->serviceContainer->make(TypeDetectorInterface::class)->isArray($value)) {

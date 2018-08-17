@@ -198,7 +198,8 @@ class Dto extends \ArrayObject implements DtoInterface
 
         if (parent::offsetExists($key)) {
             $value = parent::offsetGet($key);
-            if (isset($value[0]) && $value[0] instanceof Carbon) {
+            if (array_key_exists(0, $value) &&
+                ($value[0] instanceof Carbon || $value[0] === null)) {
                 return $value[0];
             }
             return $value;
@@ -267,7 +268,10 @@ class Dto extends \ArrayObject implements DtoInterface
 
         $this->storage_type = $this->regulator->chooseDataStorageType($value, $this->schema);
 
-        if ($this->storage_type === 'object') {
+
+        if ($value instanceof Carbon || $this->storage_type === "timestamp") {
+            $this->hydrateTimestamp($value);
+        } else if ($this->storage_type === 'object') {
             $this->hydrateObject($value);
         } elseif ($this->storage_type === 'array') {
             $this->hydrateArray($value);
@@ -276,12 +280,15 @@ class Dto extends \ArrayObject implements DtoInterface
         }
     }
 
+    protected function hydrateTimestamp($value)
+    {
+        $converter = new TypeConverter();
+        $value = $converter->toTimestamp($value);
+        parent::offsetSet(0, $value);
+    }
+
     protected function hydrateObject($value)
     {
-        if ($value instanceof Carbon) {
-            parent::offsetSet(0, $value);
-            return;
-        }
         foreach ($value as $k => $v) {
             $value[$k] = $this->regulator->getFilteredValueForKey($v, $k, $this->schema);
         }
@@ -377,7 +384,15 @@ class Dto extends \ArrayObject implements DtoInterface
 
         $output = [];
         foreach ($this as $k => $v) {
-            $output[$k] = ($v->getStorageType() === 'scalar') ? $v->toScalar() : $v->toArray();
+            if ($this->storage_type === "timestamp" || $v instanceof Carbon) {
+                if ($v instanceof Carbon)
+                    $output = $v;
+                else {
+                    $converter = new TypeConverter();
+                    $output = $converter->toTimestamp($v);
+                }
+            } else
+                $output[$k] = ($v->getStorageType() === 'scalar') ? $v->toScalar() : $v->toArray();
         }
         return $output;
     }

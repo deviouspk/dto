@@ -44,7 +44,18 @@ class TypeDetector implements TypeDetectorInterface
 
     public function isTimestamp($value)
     {
-        return is_string($value) || $value instanceof \DateTimeInterface || $value instanceof \DateInterval;
+        try {
+            if (is_array($value)) {
+                return $this->isTimestamp($value['date']);
+            } elseif ($value instanceof Carbon) {
+                return true;
+            }
+            new Carbon($value);
+            return true;
+        } catch (\Exception $exception) {
+            return false;
+        }
+
     }
 
     /**
